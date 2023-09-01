@@ -52,25 +52,29 @@ def process_movements():
         gripper.step()
         time.sleep(2)
 
+
 def gen_frames():  
     while True:
         success, frame = camera.read()  # read the camera frame
         if not success:
             break
         else:
-            frame = cv2.resize(frame, (64, 64))
+            #frame = cv2.resize(frame, (64, 64))
             ret, buffer = cv2.imencode('.jpg', frame)
             frame = buffer.tobytes()
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')  # concat frame one by one and show result
+            yield frame
+            #yield (b'--frame\r\n'
+            #       b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')  # concat frame one by one and show result
+        socketio.sleep(0)
+        print("Frame")
+
+def stream_video():
+    for video_frame in gen_frames():
+        socketio.emit('my_video_frame', {'data': video_frame})
 
 @app.route('/')
 def index():
     return render_template('index.html', async_mode=socketio.async_mode)
-
-@app.route('/video_feed')
-def video_feed():
-    return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @socketio.event
 def key_down(message):
@@ -105,11 +109,13 @@ def disconnect_request():
 
 @socketio.event
 def my_ping():
+    print("Ping, send Pong")
     emit('my_pong')
 
 
 @socketio.event
 def connect():
+    socketio.start_background_task(stream_video)
     emit('my_response', {'data': 'Connected', 'count': 0})
 
 
