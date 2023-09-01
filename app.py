@@ -1,12 +1,11 @@
 import numpy as np
 import pydantic
-from flask import Flask, render_template, request, copy_current_request_context, Response
-from flask_socketio import SocketIO, emit, disconnect
+from flask import Flask, render_template, request
+from flask_socketio import SocketIO, emit
 import cv2
 from cares_gripper.scripts.configurations import GripperConfig
 from cares_gripper.scripts.Gripper import Gripper
 import threading
-import time
 
 # Set this variable to "threading", "eventlet" or "gevent" to test the
 # different async modes, or leave it set to None for the application to choose
@@ -20,6 +19,8 @@ socketio = SocketIO(app, async_mode=async_mode)
 camera = cv2.VideoCapture(0)
 
 keys_pressed = set()
+stream_quality = 0.25 # percentage
+stream_running = False
 
 gripper_config = pydantic.parse_file_as(path="gripper_4DOF_config_ID1.json", type_=GripperConfig)
 gripper = Gripper(gripper_config)
@@ -47,11 +48,11 @@ def process_movements():
         if 'KeyD' in keys_pressed:
             positions[3] -= 10
 
+        if 'KeyH' in keys_pressed:
+            positions = gripper_config.home_pose
+
         positions = np.clip(positions, gripper_config.min_values, gripper_config.max_values)
         gripper.move(positions)
-        gripper.step()
-        time.sleep(2)
-
 
 def gen_frames():  
     while True:
@@ -59,18 +60,15 @@ def gen_frames():
         if not success:
             break
         else:
-            #frame = cv2.resize(frame, (64, 64))
+            frame = cv2.resize(frame, (round(frame.shape[0] * stream_quality), round(frame.shape[1] * stream_quality)))
             ret, buffer = cv2.imencode('.jpg', frame)
             frame = buffer.tobytes()
             yield frame
-            #yield (b'--frame\r\n'
-            #       b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')  # concat frame one by one and show result
-        socketio.sleep(0)
-        print("Frame")
+        socketio.sleep(.05) # reduce network load
 
 def stream_video():
     for video_frame in gen_frames():
-        socketio.emit('my_video_frame', {'data': video_frame})
+        socketio.emit('video_frame', {'data': video_frame})
 
 @app.route('/')
 def index():
@@ -79,49 +77,27 @@ def index():
 @socketio.event
 def key_down(message):
     keys_pressed.add(message['key'])
-    #emit('my_response',
-    #     {'data': str(keys_pressed)})
 
 @socketio.event
 def key_up(message):
-    keys_pressed.remove(message['key'])
-    #emit('my_response',
-    #     {'data': str(keys_pressed)})
+    keys_pressed.discard(message['key'])
 
 @socketio.event
-def my_event(message):
-    emit('my_response',
-         {'data': message['data']})
+def adjust_stream_quality(message):
+    global stream_quality
+    stream_quality = float(message['value'])
 
 @socketio.event
-def disconnect_request():
-    @copy_current_request_context
-    def can_disconnect():
-        disconnect()
-
-    # for this emit we use a callback function
-    # when the callback function is invoked we know that the message has been
-    # received and it is safe to disconnect
-    emit('my_response',
-         {'data': 'Disconnected!'},
-         callback=can_disconnect)
-
-
-@socketio.event
-def my_ping():
-    print("Ping, send Pong")
-    emit('my_pong')
-
+def ping():
+    emit('pong')
 
 @socketio.event
 def connect():
-    socketio.start_background_task(stream_video)
+    global stream_running
+    if not stream_running:
+        socketio.start_background_task(stream_video)
+        stream_running = True
     emit('my_response', {'data': 'Connected', 'count': 0})
-
-
-@socketio.on('disconnect')
-def test_disconnect():
-    print('Client disconnected', request.sid)
 
 
 if __name__ == '__main__':

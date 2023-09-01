@@ -6,11 +6,11 @@
     "baudrate": 1000000,
 
     "torque_limit": 225,
-    "speed_limit":  225,
+    "speed_limit":  275,
 
     "num_motors": 4,
-    "min_values": [300,300,300,300],
-    "max_values": [680,680,680,680],
+    "min_values": [200,200,200,200],
+    "max_values": [800,800,800,800],
 
     "home_pose": [512,512,512,512],
 

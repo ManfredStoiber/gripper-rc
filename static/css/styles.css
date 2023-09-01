@@ -1,0 +1,142 @@
+* {
+    box-sizing: border-box;
+}
+
+html {
+    height: 100%;
+}
+
+body {
+    height: 100%;
+    margin: 0;
+    font-family: "Roboto Light", sans-serif;
+    display: flex;
+    flex-direction: column;
+}
+
+#content {
+    height: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-content: center;
+}
+
+#stream {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+#stream-container {
+    height: 500px;
+    width: 500px;
+    min-height: 300px;
+    min-width: 300px;
+    resize: both;
+    overflow: hidden;
+    display: flex;
+    box-shadow: 0 0 50px #304d7677;
+    border-radius: 20px;
+    z-index: 1;
+}
+
+#adjust-stream-quality-container {
+    display: flex;
+    margin: 5px;
+    position: absolute;
+    justify-content: center;
+    width: inherit;
+    min-height: 300px;
+    min-width: 300px;
+}
+
+.slider {
+  -webkit-appearance: none;
+  height: 15px;
+  border-radius: 5px;
+  background: #d3d3d3;
+  outline: none;
+  opacity: 0.7;
+  -webkit-transition: .2s;
+  transition: opacity .2s;
+}
+
+.slider:hover {
+    opacity: 1;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background: #304d76;
+  cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background: #304d76;
+  cursor: pointer;
+}
+
+#controls {
+    height: 300px;
+    margin-left: 32px;
+    padding: 8px;
+    background-color: #304d76;
+    border-radius: 20px;
+    color: white;
+    box-shadow: 0 0 50px #304d7677;
+}
+
+#controls-headline {
+    margin: 0;
+}
+
+#controls-image {
+    height: 250px;
+    width: 250px;
+    border-radius: 20px;
+}
+
+#ping {
+    position: absolute;
+    margin: 8px;
+    align-self: flex-end;
+}
+
+.header {
+    #background-color: lightgrey;
+    padding: 8px;
+    text-align: center;
+    color: #304d76;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#cares-image {
+    height: 100px;
+}
+
+#uoa-image {
+    height: 100px;
+    padding: 16px;
+}
+
+.overlay {
+    #font-weight: bold;
+    color: white;
+    text-shadow: 0.07em 0 #304d76, 0 0.07em #304d76, -0.07em 0 #304d76, 0 -0.07em #304d76;
+}
+
+.bold {
+    font-weight: bold;
+}
