@@ -45,6 +45,10 @@
                 img.src = imageUrl;
                 img.classList.remove('hidden')
                 document.getElementById('stream-placeholder').classList.add('hidden')
+                document.getElementById('servo-slider-0').value = msg.slider_values[0]
+                document.getElementById('servo-slider-1').value = msg.slider_values[1]
+                document.getElementById('servo-slider-2').value = msg.slider_values[2]
+                document.getElementById('servo-slider-3').value = msg.slider_values[3]
             })
 
             document.addEventListener('keydown', (event) => {

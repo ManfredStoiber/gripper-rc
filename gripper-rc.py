@@ -24,18 +24,21 @@ gripper = Gripper(gripper_config)
 keys_pressed = set()
 stream_quality = 0.25 # percentage
 stream_running = False
-servo_speeds = np.zeros(len(gripper_config.home_pose))
+servo_speeds = np.zeros(len(gripper_config.home_pose), dtype=int)
 servo_positions = {}
+new_positions = np.array(gripper.current_positions())
 
 def process_movements():
     global gripper
     global servo_positions
+    global new_positions
     while True:
             
         if len(servo_positions) > 0:
-            new_positions = gripper.current_positions()
+            new_positions = np.array(gripper.current_positions())
             for servo, value in servo_positions.items():
                 new_positions[servo] = round((gripper_config.max_values[servo] - gripper_config.min_values[servo]) * value + gripper_config.min_values[servo])
+            servo_positions = {}
                 
         elif len(keys_pressed) > 0:
             new_positions = np.array(gripper.current_positions())
@@ -73,7 +76,7 @@ def process_movements():
             if 'KeyH' in keys_pressed:
                 new_positions = gripper_config.home_pose
 
-            new_positions = np.clip(positions, gripper_config.min_values, gripper_config.max_values)
+            new_positions = np.clip(new_positions, gripper_config.min_values, gripper_config.max_values)
             print(f"new_positions: {new_positions}")
             
         else:
@@ -98,8 +101,13 @@ def gen_frames():
         socketio.sleep(.05) # reduce network load
 
 def stream_video():
+    global new_positions
     for video_frame in gen_frames():
-        socketio.emit('video_frame', {'data': video_frame})
+        tmp = new_positions[[3, 1, 2, 0]]
+        tmp = (tmp - gripper_config.min_values) / (np.array(gripper_config.max_values) - np.array(gripper_config.min_values))
+        tmp[2] = 1 - tmp[2]
+        tmp[3] = 1 - tmp[3]
+        socketio.emit('video_frame', {'data': video_frame, 'slider_values': tmp.tolist()})
 
 @app.route('/')
 def index():
@@ -121,16 +129,19 @@ def adjust_stream_quality(message):
 @socketio.event
 def set_servo_position(message):
     global servo_positions
+    value = message['value']
     if message['servo'] == 0:
         servo_id = 3;
     elif message['servo'] == 1:
         servo_id = 1;
     elif message['servo'] == 2:
         servo_id = 2;
+        value = 1 - value
     elif message['servo'] == 3:
         servo_id = 0;
+        value = 1 - value
 
-    servo_positions[message['servo']] = message['value']
+    servo_positions[servo_id] = value
 
 @socketio.event
 def ping():
