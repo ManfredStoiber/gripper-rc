@@ -7,30 +7,28 @@ RUN apt-get update && apt-get -y install vim
 # install gripper requirements
 RUN apt-get -y install ffmpeg libsm6 libxext6
 
-RUN git clone https://github.com/ManfredStoiber/gripper_docker.git
-
 ## install cares_lib
-#COPY ./gripper_docker/cares_lib /cares_lib
-RUN pip install -r /gripper_docker/cares_lib/requirements.txt
-RUN pip install /gripper_docker/cares_lib
+RUN git clone https://github.com/UoA-CARES/cares_lib.git
+RUN pip install -r /cares_lib/requirements.txt
+RUN pip install /cares_lib
 
 ## install cares_reinforcement_learning
-#COPY ./gripper_docker/cares_reinforcement_learning /cares_reinforcement_learning
-RUN pip install -r /gripper_docker/cares_reinforcement_learning/requirements.txt
-RUN pip install --editable /gripper_docker/cares_reinforcement_learning
+RUN git clone https://github.com/UoA-CARES/cares_reinforcement_learning.git
+RUN pip install -r /cares_reinforcement_learning/requirements.txt
+RUN pip install --editable /cares_reinforcement_learning
 
-## copy Gripper-Code
+## install Gripper-Code
+RUN git clone https://github.com/ManfredStoiber/gripper_docker.git
 #COPY ./gripper_docker/Gripper-Code /Gripper-Code
 RUN pip install -r /gripper_docker/cares_gripper/requirements.txt
 RUN pip install --editable /gripper_docker/cares_gripper
 
-# install dreamer requirements
-COPY ./requirements.txt /gripper-rc/requirements.txt
+# install gripper-rc requirements
+COPY . /gripper-rc
 RUN pip install -r /gripper-rc/requirements.txt
 RUN pip install swig==4.1.1
 RUN apt-get -y install patchelf libosmesa6-dev libegl1-mesa libgl1-mesa-glx libglfw3 libglew-dev
 RUN pip install pyglet==1.5.27
 RUN apt-get -y install libglib2.0-0
-COPY . /gripper-rc
 WORKDIR /gripper-rc
 ENTRYPOINT python3 -u /gripper-rc/gripper-rc.py
