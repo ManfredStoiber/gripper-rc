@@ -21,32 +21,37 @@ camera = cv2.VideoCapture(0)
 keys_pressed = set()
 stream_quality = 0.25 # percentage
 stream_running = False
+servo_speeds = np.zeros(len(gripper_config.home_pose))
 
 gripper_config = pydantic.parse_file_as(path="gripper_4DOF_config_ID1.json", type_=GripperConfig)
 gripper = Gripper(gripper_config)
 
 def process_movements():
     while True:
-        positions = gripper.current_positions()
+        if len(keys_pressed) == 0:
+            continue
+        positions = np.array(gripper.current_positions())
         if 'KeyJ' in keys_pressed:
-            positions[0] += 10
+            servo_speeds[0] += 10
         if 'KeyL' in keys_pressed:
-            positions[0] -= 10
+            servo_speeds[0] -= 10
 
         if 'KeyK' in keys_pressed:
-            positions[1] += 10
+            servo_speeds[1] += 10
         if 'KeyI' in keys_pressed:
-            positions[1] -= 10
+            servo_speeds[1] -= 10
 
         if 'KeyS' in keys_pressed:
-            positions[2] += 10
+            servo_speeds[2] += 10
         if 'KeyF' in keys_pressed:
-            positions[2] -= 10
+            servo_speeds[2] -= 10
 
         if 'KeyE' in keys_pressed:
-            positions[3] += 10
+            servo_speeds[3] += 10
         if 'KeyD' in keys_pressed:
-            positions[3] -= 10
+            servo_speeds[3] -= 10
+
+        positions = positions + servo_speeds
 
         if 'KeyH' in keys_pressed:
             positions = gripper_config.home_pose
