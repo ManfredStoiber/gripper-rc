@@ -43,6 +43,8 @@
                 var img = document.getElementById("stream")
                 urlCreator.revokeObjectURL(img.src)
                 img.src = imageUrl;
+                img.classList.remove('hidden')
+                document.getElementById('stream-placeholder').classList.add('hidden')
             })
 
             document.addEventListener('keydown', (event) => {
@@ -54,9 +56,21 @@
                 socket.emit('key_up', {key: codeValue})
             }, false);
 
-            // Update the current slider value (each time you drag the slider handle)
+            // Update the current slider values (each time you drag a slider handle)
             document.getElementById("stream-quality-slider").oninput = function() {
                 socket.emit('adjust_stream_quality', {value: this.value / 100.0})
+            }
+            document.getElementById("servo-slider-0").oninput = function() {
+                socket.emit('set_servo_position', {servo: 0, value: this.value / 100.0})
+            }
+            document.getElementById("servo-slider-1").oninput = function() {
+                socket.emit('set_servo_position', {servo: 1, value: this.value / 100.0})
+            }
+            document.getElementById("servo-slider-2").oninput = function() {
+                socket.emit('set_servo_position', {servo: 2, value: this.value / 100.0})
+            }
+            document.getElementById("servo-slider-3").oninput = function() {
+                socket.emit('set_servo_position', {servo: 3, value: this.value / 100.0})
             }
         });
     </script>
@@ -76,11 +90,27 @@
             <span>Quality: </span>
             <input type="range" min="1" max="100" value="25" class="slider" id="stream-quality-slider">
         </div>
-        <img id="stream" src="">
+        <img id="stream" src="" class="hidden">
+        <div id="stream-placeholder">
+            <h1>Loading</h1>
+            <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
+        </div>
     </div>
     <div id="controls">
         <h1 id="controls-headline">Controls:</h1>
-        <img id="controls-image" src="{{ url_for('static', filename='controls.png') }}">
+        <div id="control-container">
+            <img id="controls-image" src="{{ url_for('static', filename='controls.png') }}">
+            <div id="control-slider">
+                <div class="control-slider-row">
+                    <input type="range" min="1" max="100" value="25" class="slider" id="servo-slider-0">
+                    <input type="range" min="1" max="100" value="25" class="slider" id="servo-slider-1">
+                </div>
+                <div class="control-slider-row">
+                    <input type="range" min="1" max="100" value="25" class="slider" id="servo-slider-2">
+                    <input type="range" min="1" max="100" value="25" class="slider" id="servo-slider-3">
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 </body>

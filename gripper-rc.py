@@ -18,46 +18,72 @@ socketio = SocketIO(app, async_mode=async_mode)
 
 camera = cv2.VideoCapture(0)
 
+gripper_config = pydantic.parse_file_as(path="gripper_4DOF_config_ID1.json", type_=GripperConfig)
+gripper = Gripper(gripper_config)
+
 keys_pressed = set()
 stream_quality = 0.25 # percentage
 stream_running = False
 servo_speeds = np.zeros(len(gripper_config.home_pose))
-
-gripper_config = pydantic.parse_file_as(path="gripper_4DOF_config_ID1.json", type_=GripperConfig)
-gripper = Gripper(gripper_config)
+servo_positions = {}
 
 def process_movements():
+    global gripper
+    global servo_positions
     while True:
-        if len(keys_pressed) == 0:
+            
+        if len(servo_positions) > 0:
+            new_positions = gripper.current_positions()
+            for servo, value in servo_positions.items():
+                new_positions[servo] = round((gripper_config.max_values[servo] - gripper_config.min_values[servo]) * value + gripper_config.min_values[servo])
+                
+        elif len(keys_pressed) > 0:
+            new_positions = np.array(gripper.current_positions())
+            if 'KeyJ' in keys_pressed and not 'KeyL' in keys_pressed:
+                servo_speeds[0] += 1
+            elif 'KeyL' in keys_pressed and not 'KeyJ' in keys_pressed:
+                servo_speeds[0] -= 1
+            else:
+                servo_speeds[0] = 0
+
+
+            if 'KeyK' in keys_pressed and not 'KeyI' in keys_pressed:
+                servo_speeds[1] += 1
+            elif 'KeyI' in keys_pressed and not 'KeyK' in keys_pressed:
+                servo_speeds[1] -= 1
+            else:
+                servo_speeds[1] = 0
+
+            if 'KeyS' in keys_pressed and not 'KeyF' in keys_pressed:
+                servo_speeds[2] += 1
+            elif 'KeyF' in keys_pressed and not 'KeyS' in keys_pressed:
+                servo_speeds[2] -= 1
+            else:
+                servo_speeds[2] = 0
+
+            if 'KeyE' in keys_pressed and not 'KeyD' in keys_pressed:
+                servo_speeds[3] += 1
+            elif 'KeyD' in keys_pressed and not 'KeyE' in keys_pressed:
+                servo_speeds[3] -= 1
+            else:
+                servo_speeds[3] = 0
+
+            new_positions = new_positions + servo_speeds
+
+            if 'KeyH' in keys_pressed:
+                new_positions = gripper_config.home_pose
+
+            new_positions = np.clip(positions, gripper_config.min_values, gripper_config.max_values)
+            print(f"new_positions: {new_positions}")
+            
+        else:
             continue
-        positions = np.array(gripper.current_positions())
-        if 'KeyJ' in keys_pressed:
-            servo_speeds[0] += 10
-        if 'KeyL' in keys_pressed:
-            servo_speeds[0] -= 10
-
-        if 'KeyK' in keys_pressed:
-            servo_speeds[1] += 10
-        if 'KeyI' in keys_pressed:
-            servo_speeds[1] -= 10
-
-        if 'KeyS' in keys_pressed:
-            servo_speeds[2] += 10
-        if 'KeyF' in keys_pressed:
-            servo_speeds[2] -= 10
-
-        if 'KeyE' in keys_pressed:
-            servo_speeds[3] += 10
-        if 'KeyD' in keys_pressed:
-            servo_speeds[3] -= 10
-
-        positions = positions + servo_speeds
-
-        if 'KeyH' in keys_pressed:
-            positions = gripper_config.home_pose
-
-        positions = np.clip(positions, gripper_config.min_values, gripper_config.max_values)
-        gripper.move(positions)
+            
+        try:
+            gripper.move(new_positions)
+        except:
+            print("Gripper crashed.. reinitialize")
+            gripper = Gripper(gripper_config)
 
 def gen_frames():  
     while True:
@@ -91,6 +117,20 @@ def key_up(message):
 def adjust_stream_quality(message):
     global stream_quality
     stream_quality = float(message['value'])
+
+@socketio.event
+def set_servo_position(message):
+    global servo_positions
+    if message['servo'] == 0:
+        servo_id = 3;
+    elif message['servo'] == 1:
+        servo_id = 1;
+    elif message['servo'] == 2:
+        servo_id = 2;
+    elif message['servo'] == 3:
+        servo_id = 0;
+
+    servo_positions[message['servo']] = message['value']
 
 @socketio.event
 def ping():
