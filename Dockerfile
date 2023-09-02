@@ -1,9 +1,7 @@
 FROM nvidia/cuda:11.6.2-base-ubuntu20.04
-VOLUME /dreamerv3-torch-logdir
 ARG DEBIAN_FRONTEND=noninteractive
 ENV TZ=Pacific/Auckland
-RUN apt-get update
-RUN apt-get -y install git python3 python3-pip
+RUN apt-get update && apt-get -y install git python3 python3-pip
 RUN apt-get update && apt-get -y install vim
 
 # install gripper requirements
@@ -27,11 +25,12 @@ RUN pip install -r /gripper_docker/cares_gripper/requirements.txt
 RUN pip install --editable /gripper_docker/cares_gripper
 
 # install dreamer requirements
-COPY ./requirements.txt /dreamerv3-torch/requirements.txt
-RUN pip install -r /dreamerv3-torch/requirements.txt
+COPY ./requirements.txt /gripper-rc/requirements.txt
+RUN pip install -r /gripper-rc/requirements.txt
 RUN pip install swig==4.1.1
 RUN apt-get -y install patchelf libosmesa6-dev libegl1-mesa libgl1-mesa-glx libglfw3 libglew-dev
 RUN pip install pyglet==1.5.27
 RUN apt-get -y install libglib2.0-0
 COPY . /gripper-rc
-# ENTRYPOINT python3 -u /dreamerv3-torch/dreamer.py --configs gymnasium --task gymnasium_ClassicControl_MountainCar-v0 --logdir /dreamerv3-torch-logdir/mountaincar
+WORKDIR /gripper-rc
+ENTRYPOINT python3 -u /gripper-rc/gripper-rc.py

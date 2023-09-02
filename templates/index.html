@@ -45,10 +45,10 @@
                 img.src = imageUrl;
                 img.classList.remove('hidden')
                 document.getElementById('stream-placeholder').classList.add('hidden')
-                document.getElementById('servo-slider-0').value = msg.slider_values[0]
-                document.getElementById('servo-slider-1').value = msg.slider_values[1]
-                document.getElementById('servo-slider-2').value = msg.slider_values[2]
-                document.getElementById('servo-slider-3').value = msg.slider_values[3]
+                document.getElementById('servo-slider-0').value = Math.round(msg.slider_values[0] * 100)
+                document.getElementById('servo-slider-1').value = Math.round(msg.slider_values[1] * 100)
+                document.getElementById('servo-slider-2').value = Math.round(msg.slider_values[2] * 100)
+                document.getElementById('servo-slider-3').value = Math.round(msg.slider_values[3] * 100)
             })
 
             document.addEventListener('keydown', (event) => {
@@ -82,36 +82,63 @@
 <body>
 <div class="header">
     <img id="cares-image" src="{{ url_for('static', filename='cares.png') }}">
-    <h1>Gripper Remote Control</h1>
+    <span id="headline">
+        <h1> Gripper Remote Control </h1>
+        <div class="tooltip">
+            <img src="{{ url_for('static', filename='help.svg') }}">
+            <div class="tooltiptext">
+                <p>Small tool for remote controlling the CARES Gripper by hand</p>
+                <p>Use quality slider to reduce stream quality for better performance</p>
+                <p>Gripper can be controlled using the sliders or by pressing the specified keys</p>
+                <p>Press "H" to return to home position</p>
+                <p>Known bugs:</p>
+                <ul>
+                    <li>Gripper sometimes crashes. Although the application tries to restart it, this does not work always. If this occurs, please restart the application</li>
+                </ul>
+            </div>
+        </div>
+    </span>
     <img id="uoa-image" src="{{ url_for('static', filename='uoa.png') }}">
 </div>
 <div id="content">
     <div id="stream-container">
-        <div id="ping" class="overlay">
-            Ping: <span id="ping-pong"></span>
-        </div>
-        <div id="adjust-stream-quality-container" class="overlay bold">
-            <span>Quality: </span>
-            <input type="range" min="1" max="100" value="25" class="slider" id="stream-quality-slider">
-        </div>
         <img id="stream" src="" class="hidden">
         <div id="stream-placeholder">
             <h1>Loading</h1>
             <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
         </div>
-    </div>
-    <div id="controls">
-        <h1 id="controls-headline">Controls:</h1>
-        <div id="control-container">
-            <img id="controls-image" src="{{ url_for('static', filename='controls.png') }}">
-            <div id="control-slider">
-                <div class="control-slider-row">
+        <div id="ping-container">
+            <div id="ping" class="overlay">
+                Ping: <span id="ping-pong"></span>
+            </div>
+        </div>
+        <div id="adjust-stream-quality-container" class="overlay bold">
+            <span>Quality: </span>
+            <input type="range" min="1" max="100" value="25" class="slider" id="stream-quality-slider">
+        </div>
+        <div id="control-slider-container">
+            <div class="control-slider-row">
+                <div class="labeled-slider">
+                    <span style="left: 5px">D</span>
                     <input type="range" min="1" max="100" value="25" class="slider" id="servo-slider-0">
-                    <input type="range" min="1" max="100" value="25" class="slider" id="servo-slider-1">
+                    <span style="right: 5px">E</span>
                 </div>
-                <div class="control-slider-row">
+                <div class="labeled-slider">
+                    <span style="left: 5px">I</span>
+                    <input type="range" min="1" max="100" value="25" class="slider" id="servo-slider-1">
+                    <span style="right: 5px">K</span>
+                </div>
+            </div>
+            <div class="control-slider-row">
+                <div class="labeled-slider">
+                    <span style="left: 5px">S</span>
                     <input type="range" min="1" max="100" value="25" class="slider" id="servo-slider-2">
+                    <span style="right: 5px">F</span>
+                </div>
+                <div class="labeled-slider">
+                    <span style="left: 5px">J</span>
                     <input type="range" min="1" max="100" value="25" class="slider" id="servo-slider-3">
+                    <span style="right: 5px">L</span>
                 </div>
             </div>
         </div>

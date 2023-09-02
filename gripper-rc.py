@@ -21,6 +21,8 @@ camera = cv2.VideoCapture(0)
 gripper_config = pydantic.parse_file_as(path="gripper_4DOF_config_ID1.json", type_=GripperConfig)
 gripper = Gripper(gripper_config)
 
+acceleration = 2
+
 keys_pressed = set()
 stream_quality = 0.25 # percentage
 stream_running = False
@@ -43,31 +45,31 @@ def process_movements():
         elif len(keys_pressed) > 0:
             new_positions = np.array(gripper.current_positions())
             if 'KeyJ' in keys_pressed and not 'KeyL' in keys_pressed:
-                servo_speeds[0] += 1
+                servo_speeds[0] += acceleration
             elif 'KeyL' in keys_pressed and not 'KeyJ' in keys_pressed:
-                servo_speeds[0] -= 1
+                servo_speeds[0] -= acceleration
             else:
                 servo_speeds[0] = 0
 
 
             if 'KeyK' in keys_pressed and not 'KeyI' in keys_pressed:
-                servo_speeds[1] += 1
+                servo_speeds[1] += acceleration
             elif 'KeyI' in keys_pressed and not 'KeyK' in keys_pressed:
-                servo_speeds[1] -= 1
+                servo_speeds[1] -= acceleration
             else:
                 servo_speeds[1] = 0
 
             if 'KeyS' in keys_pressed and not 'KeyF' in keys_pressed:
-                servo_speeds[2] += 1
+                servo_speeds[2] += acceleration
             elif 'KeyF' in keys_pressed and not 'KeyS' in keys_pressed:
-                servo_speeds[2] -= 1
+                servo_speeds[2] -= acceleration
             else:
                 servo_speeds[2] = 0
 
             if 'KeyE' in keys_pressed and not 'KeyD' in keys_pressed:
-                servo_speeds[3] += 1
+                servo_speeds[3] += acceleration
             elif 'KeyD' in keys_pressed and not 'KeyE' in keys_pressed:
-                servo_speeds[3] -= 1
+                servo_speeds[3] -= acceleration
             else:
                 servo_speeds[3] = 0
 
@@ -77,9 +79,9 @@ def process_movements():
                 new_positions = gripper_config.home_pose
 
             new_positions = np.clip(new_positions, gripper_config.min_values, gripper_config.max_values)
-            print(f"new_positions: {new_positions}")
-            
+
         else:
+            servo_speeds = np.zeros(len(gripper_config.home_pose), dtype=int)
             continue
             
         try:
